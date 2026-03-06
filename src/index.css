@@ -1,7 +1,9 @@
 :root {
-  --primary: #064E3B; /* Dark Green */
+  --primary: #064E3B;
+  /* Dark Green */
   --primary-light: #065F46;
-  --accent: #D4AF37; /* Gold */
+  --accent: #D4AF37;
+  /* Gold */
   --accent-light: #F1D279;
   --bg-light: #F9FAFB;
   --bg-dark: #111827;
@@ -104,4 +106,111 @@ button {
 .btn-accent:hover {
   background-color: var(--accent-light);
   transform: translateY(-2px);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes liveDot {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.4;
+    transform: scale(1.4);
+  }
+}
+
+/* ── Status Badge Utilities ─────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.badge-live {
+  background: rgba(239, 68, 68, 0.12);
+  color: #DC2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-live .live-dot {
+  width: 7px;
+  height: 7px;
+  background: #EF4444;
+  border-radius: 50%;
+  display: inline-block;
+  animation: liveDot 1.2s ease-in-out infinite;
+}
+
+.badge-finished {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-locked {
+  background: rgba(107, 114, 128, 0.1);
+  color: #4B5563;
+  border: 1px solid rgba(107, 114, 128, 0.25);
+}
+
+.badge-upcoming {
+  background: rgba(212, 175, 55, 0.1);
+  color: #92710b;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+/* ── Helper Buttons ─────────────────────────── */
+.btn-secondary {
+  background: #F3F4F6;
+  color: var(--text-main);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  border: 1px solid #E5E7EB;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #E5E7EB;
+}
+
+.text-danger {
+  color: #EF4444;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.text-danger:hover {
+  color: #DC2626;
 }

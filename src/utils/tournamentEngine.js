@@ -77,7 +77,7 @@ export const calculateStandings = (teams, matches) => {
  */
 export const getAggregatedPlayerStats = (players, statistics, matches, filterEmpty = false) => {
     const activeMatchIds = new Set(
-        matches.filter(m => m.status === 'finished' || m.status === 'locked').map(m => m.id)
+        matches.filter(m => m.status === 'finished' || m.status === 'locked' || m.status === 'live').map(m => m.id)
     );
 
     const results = players.map(player => {

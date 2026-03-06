@@ -1,9 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { matchService, teamService, groupService, playerService } from '../services/api';
-import { Calendar, Trophy, ChevronRight, Timer, AlertCircle, Loader2, Clock } from 'lucide-react';
+import { Calendar, Trophy, ChevronRight, Timer, AlertCircle, Loader2, Clock, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { calculateStandings } from '../utils/tournamentEngine';
 import imgfoot from "../components/foot.png";
+
+/* Inline status badge for public-facing pages */
+const MatchStatusBadge = ({ status }) => {
+    if (status === 'live') return (
+        <span className="badge badge-live">
+            <span className="live-dot" />
+            LIVE
+        </span>
+    );
+    if (status === 'finished') return (
+        <span className="badge badge-finished">
+            <CheckCircle size={11} /> Finished
+        </span>
+    );
+    if (status === 'locked') return (
+        <span className="badge badge-locked">
+            <Trophy size={11} /> Locked
+        </span>
+    );
+    return <span className="badge badge-upcoming"><Clock size={11} /> Upcoming</span>;
+};
 const Home = () => {
     const [matches, setMatches] = useState([]);
     const [groups, setGroups] = useState([]);
@@ -49,10 +70,17 @@ const Home = () => {
 
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // Today's Matches: Not finished/locked, sorted by time
+    // Today's Matches: Sorted by Live > Finished > Upcoming
     const todayMatches = matches
-        .filter(m => m.date === todayStr && m.status !== 'finished' && m.status !== 'locked')
-        .sort((a, b) => a.startTime.localeCompare(b.startTime));
+        .filter(m => m.date === todayStr)
+        .sort((a, b) => {
+            const statusOrder = { live: 0, finished: 1, upcoming: 2, locked: 1 };
+            const priorityA = statusOrder[a.status] ?? 3;
+            const priorityB = statusOrder[b.status] ?? 3;
+
+            if (priorityA !== priorityB) return priorityA - priorityB;
+            return a.startTime.localeCompare(b.startTime);
+        });
 
     return (
         <div>
@@ -81,60 +109,75 @@ const Home = () => {
                     {todayMatches.length > 0 ? todayMatches.map(match => {
                         const teamA = teams.find(t => t.id === match.teamAId);
                         const teamB = teams.find(t => t.id === match.teamBId);
+                        const isLive = match.status === 'live';
+                        const isFinished = match.status === 'finished' || match.status === 'locked';
+                        const showScore = isLive || isFinished;
+
+                        const topBorder = isLive ? '#EF4444' : isFinished ? '#10B981' : 'var(--accent)';
 
                         return (
-                            <div key={match.id} className="card match-card" style={{ padding: '1.5rem', borderTop: '4px solid var(--accent)' }}>
+                            <div key={match.id} className="card match-card" style={{
+                                padding: '1.5rem',
+                                borderTop: `4px solid ${topBorder}`,
+                                boxShadow: isLive ? '0 0 24px rgba(239,68,68,0.18)' : 'var(--shadow)'
+                            }}>
+                                {/* Teams Row */}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    {/* Team A */}
                                     <div style={{ flex: 1, textAlign: 'center' }}>
                                         <div style={{ width: '56px', height: '56px', margin: '0 auto 0.75rem', backgroundColor: '#f9fafb', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem' }}>
                                             <img src={teamA?.logo || '/teamlogo.png'} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                                         </div>
-                                        <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--primary)' }}>{teamA?.name}</div>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--primary)' }}>{teamA?.name}</div>
                                     </div>
 
+                                    {/* Centre: Score or time + badge */}
                                     <div style={{ flex: 1, textAlign: 'center' }}>
-                                        <div style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', color: 'var(--accent)', padding: '0.3rem 0.8rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', display: 'inline-block' }}>
-                                            {match.startTime}
+                                        {/* Score or start time */}
+                                        <div style={{
+                                            fontSize: showScore ? '1.5rem' : '1rem',
+                                            fontWeight: 'bold',
+                                            color: isLive ? '#DC2626' : isFinished ? 'var(--primary)' : 'var(--accent)',
+                                            backgroundColor: isLive ? 'rgba(239,68,68,0.06)' : isFinished ? 'rgba(6,78,59,0.05)' : 'rgba(212,175,55,0.08)',
+                                            padding: '0.35rem 0.9rem',
+                                            borderRadius: '10px',
+                                            display: 'inline-block',
+                                            border: isLive ? '1px solid rgba(239,68,68,0.25)' : 'none',
+                                            marginBottom: '0.6rem',
+                                        }}>
+                                            {showScore ? `${match.scoreA} — ${match.scoreB}` : match.startTime}
                                         </div>
-                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+
+                                        {/* Status Badge */}
+                                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.3rem' }}>
+                                            <MatchStatusBadge status={match.status} />
+                                        </div>
+
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                                             Group {groups.find(g => g.id === match.groupId)?.name}
                                         </div>
                                     </div>
 
+                                    {/* Team B */}
                                     <div style={{ flex: 1, textAlign: 'center' }}>
                                         <div style={{ width: '56px', height: '56px', margin: '0 auto 0.75rem', backgroundColor: '#f9fafb', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem' }}>
                                             <img src={teamB?.logo || '/teamlogo.png'} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                                         </div>
-                                        <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--primary)' }}>{teamB?.name}</div>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--primary)' }}>{teamB?.name}</div>
                                     </div>
                                 </div>
 
-                                {/* Player Images Section */}
+                                {/* Player Images */}
                                 <div style={{ marginTop: '1.5rem', borderTop: '1px solid #f3f4f6', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', flex: 1, justifyContent: 'center' }}>
-                                        {players.filter(p => p.teamId === match.teamAId).slice(0, 4).map(p => (
-                                            <div key={p.id} style={{ width: '28px', height: '28px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #eee' }} title={p.name}>
-                                                <img
-                                                    src={p.imageUrl || imgfoot}
-                                                    alt=""
-                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                    onError={(e) => { e.target.src = imgfoot; }}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', flex: 1, justifyContent: 'center' }}>
-                                        {players.filter(p => p.teamId === match.teamBId).slice(0, 4).map(p => (
-                                            <div key={p.id} style={{ width: '28px', height: '28px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #eee' }} title={p.name}>
-                                                <img
-                                                    src={p.imageUrl || imgfoot}
-                                                    alt=""
-                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                    onError={(e) => { e.target.src = imgfoot; }}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {[match.teamAId, match.teamBId].map(tid => (
+                                        <div key={tid} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', flex: 1, justifyContent: 'center' }}>
+                                            {players.filter(p => p.teamId === tid).slice(0, 4).map(p => (
+                                                <div key={p.id} style={{ width: '28px', height: '28px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #eee' }} title={p.name}>
+                                                    <img src={p.imageUrl || imgfoot} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.src = imgfoot; }} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         );
@@ -187,9 +230,9 @@ const Home = () => {
                                                     {players.filter(p => p.teamId === match.teamAId || p.teamId === match.teamBId).slice(0, 4).map(p => (
                                                         <div key={p.id} style={{ width: '26px', height: '26px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #eee' }}>
                                                             <img
-                                                                src={p.imageUrl ||imgfoot}
+                                                                src={p.imageUrl || imgfoot}
                                                                 alt=""
-                                                                style={{ width: '100%', height: '100%', objectFit: 'cover',marginBottom:'8px' }}
+                                                                style={{ width: '100%', height: '100%', objectFit: 'cover', marginBottom: '8px' }}
                                                                 onError={(e) => { e.target.src = imgfoot; }}
                                                             />
                                                         </div>

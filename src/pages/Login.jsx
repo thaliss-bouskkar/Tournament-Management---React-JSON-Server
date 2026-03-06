@@ -4,12 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { Trophy, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ForgotPasswordModal from '../components/ForgotPasswordModal';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
     const { login } = useAuth();
     const { settings } = useSettings(); // <-- Import settings here
     const navigate = useNavigate();
@@ -37,10 +39,10 @@ const Login = () => {
             <div className="card" style={{ width: '100%', maxWidth: '400px', animation: 'fadeIn 0.5s ease' }}>
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     {settings?.logoUrl ? (
-                        <img 
-                            src={settings.logoUrl} 
-                            alt="Tournament Logo" 
-                            style={{ width: '70px', height: '70px', margin: '0 auto 1rem', objectFit: 'contain', borderRadius: '8px' }} 
+                        <img
+                            src={settings.logoUrl}
+                            alt="Tournament Logo"
+                            style={{ width: '70px', height: '70px', margin: '0 auto 1rem', objectFit: 'contain', borderRadius: '8px' }}
                         />
                     ) : (
                         <Trophy size={48} color="var(--accent)" style={{ margin: '0 auto 1rem' }} />
@@ -97,6 +99,15 @@ const Login = () => {
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </div>
                         </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+                            <button
+                                type="button"
+                                onClick={() => setIsForgotModalOpen(true)}
+                                style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.9rem' }}
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
                     </div>
 
                     <button
@@ -109,6 +120,10 @@ const Login = () => {
                     </button>
                 </form>
             </div>
+            <ForgotPasswordModal
+                isOpen={isForgotModalOpen}
+                onClose={() => setIsForgotModalOpen(false)}
+            />
         </div>
     );
 };

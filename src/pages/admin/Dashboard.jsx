@@ -94,7 +94,7 @@ const Dashboard = () => {
 
     // Today's Matches: Not finished/locked, sorted by time
     const todayMatches = data.matches
-        .filter(m => m.date === todayStr && m.status !== 'finished' && m.status !== 'locked')
+        .filter(m => m.date === todayStr)
         .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
     // Summary Stats
@@ -179,21 +179,42 @@ const Dashboard = () => {
                                         <div style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
                                             <img src={teamA?.logo || '/teamlogo.png'} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                                         </div>
-                                        <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{teamA?.name}</div>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>{teamA?.name}</div>
                                     </div>
 
                                     <div style={{ flex: 1, textAlign: 'center' }}>
-                                        <div style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', color: 'var(--accent)', padding: '0.3rem 0.8rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', display: 'inline-block' }}>
-                                            {match.startTime}
+                                        <div style={{
+                                            backgroundColor: match.status === 'locked' || match.status === 'finished' ? 'var(--primary)' : 'rgba(212, 175, 55, 0.1)',
+                                            color: match.status === 'locked' || match.status === 'finished' ? 'white' : 'var(--accent)',
+                                            padding: '0.3rem 0.8rem',
+                                            borderRadius: '12px',
+                                            fontSize: '0.9rem',
+                                            fontWeight: 'bold',
+                                            display: 'inline-block'
+                                        }}>
+                                            {match.status === 'locked' || match.status === 'finished' ? (
+                                                <span style={{ fontSize: '1.2rem' }}>{match.scoreA} - {match.scoreB}</span>
+                                            ) : (
+                                                match.startTime
+                                            )}
                                         </div>
-                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Group {data.groups.find(g => g.id === match.groupId)?.name}</div>
+                                        <div style={{
+                                            fontSize: '0.7rem',
+                                            fontWeight: 'bold',
+                                            textTransform: 'uppercase',
+                                            color: match.status === 'locked' || match.status === 'finished' ? '#10B981' : 'var(--accent)',
+                                            marginTop: '0.5rem'
+                                        }}>
+                                            {match.status === 'locked' ? 'Locked' : (match.status === 'finished' ? 'Finished' : 'Upcoming')}
+                                        </div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Group {data.groups.find(g => g.id === match.groupId)?.name}</div>
                                     </div>
 
                                     <div style={{ flex: 1, textAlign: 'center' }}>
                                         <div style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
                                             <img src={teamB?.logo || '/teamlogo.png'} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                                         </div>
-                                        <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{teamB?.name}</div>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>{teamB?.name}</div>
                                     </div>
                                 </div>
 
@@ -214,7 +235,7 @@ const Dashboard = () => {
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', justifyContent: 'center' }}>
                                                 {data.players.filter(p => p.teamId === match.teamBId).slice(0, 5).map(p => (
                                                     <div key={p.id} title={p.name} style={{ width: '24px', height: '24px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #eee' }}>
-                                                        <img src={p.imageUrl || footImg } alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                        <img src={p.imageUrl || footImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                     </div>
                                                 ))}
                                             </div>
@@ -273,7 +294,7 @@ const Dashboard = () => {
                                                     <div style={{ display: 'flex', gap: '0.2rem', marginTop: '0.3rem' }}>
                                                         {data.players.filter(p => p.teamId === match.teamAId || p.teamId === match.teamBId).slice(0, 7).map(p => (
                                                             <div key={p.id} style={{ width: '16px', height: '16px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #eee' }}>
-                                                                <img src={p.imageUrl || imgfoot} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover',marginBottom:'14px' }} />
+                                                                <img src={p.imageUrl || imgfoot} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', marginBottom: '14px' }} />
                                                             </div>
                                                         ))}
                                                     </div>

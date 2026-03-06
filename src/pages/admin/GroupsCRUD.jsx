@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { groupService } from '../../services/api';
+import { groupService, teamService } from '../../services/api';
 import { cascadeService } from '../../services/cascadeService';
-import { Plus, Edit, Trash2, Save, X, Loader2, Search, Layers } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Loader2, Search, Layers, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const GroupsCRUD = () => {
     const [groups, setGroups] = useState([]);
+    const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({ name: '' });
@@ -14,15 +15,19 @@ const GroupsCRUD = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        fetchGroups();
+        fetchData();
     }, []);
 
-    const fetchGroups = async () => {
+    const fetchData = async () => {
         try {
-            const { data } = await groupService.getAll();
-            setGroups(data);
+            const [groupsRes, teamsRes] = await Promise.all([
+                groupService.getAll(),
+                teamService.getAll()
+            ]);
+            setGroups(groupsRes.data);
+            setTeams(teamsRes.data);
         } catch {
-            toast.error('Failed to fetch groups');
+            toast.error('Failed to fetch data');
         } finally {
             setLoading(false);
         }
@@ -36,7 +41,7 @@ const GroupsCRUD = () => {
             await groupService.create({ name: formData.name });
             toast.success('Group created successfully');
             setFormData({ name: '' });
-            fetchGroups();
+            fetchData();
         } catch {
             toast.error('Error creating group');
         } finally {
@@ -51,7 +56,7 @@ const GroupsCRUD = () => {
             await groupService.update(id, { name: editName });
             toast.success('Group updated');
             setEditingId(null);
-            fetchGroups();
+            fetchData();
         } catch {
             toast.error('Error updating group');
         } finally {
@@ -68,13 +73,13 @@ const GroupsCRUD = () => {
         setGroups(prev => prev.filter(g => g.id !== id));
 
         try {
-            await cascadeService.deleteGroup(id); // Changed from deletePlayer to deleteGroup
-            toast.success('Group and associated schedule purged'); // Changed message
-            fetchGroups(); // Background sync
+            await cascadeService.deleteGroup(id);
+            toast.success('Group and associated schedule purged');
+            fetchData();
         } catch (e) {
             console.error(e);
             toast.error('Error deleting group');
-            setGroups(originalGroups); // Rollback
+            setGroups(originalGroups);
         }
     };
 
@@ -135,41 +140,56 @@ const GroupsCRUD = () => {
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr style={{ textAlign: 'left', borderBottom: '1px solid #f3f4f6', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                    <th style={{ padding: '1rem 1.5rem' }}>GROUP NAME</th>
+                                    <th style={{ padding: '1rem 1.5rem' }}>GROUP & TEAMS</th>
                                     <th style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredGroups.length > 0 ? filteredGroups.map(group => (
-                                    <tr key={group.id} style={{ borderBottom: '1px solid #f3f4f6', transition: 'background 0.2s' }} className="group-row">
-                                        <td style={{ padding: '1.25rem 1.5rem' }}>
-                                            {editingId === group.id ? (
-                                                <input
-                                                    type="text"
-                                                    value={editName}
-                                                    onChange={(e) => setEditName(e.target.value)}
-                                                    autoFocus
-                                                    style={{ padding: '0.5rem 0.75rem', borderRadius: '6px', border: '2px solid var(--accent)', width: '100%', maxWidth: '200px', fontWeight: 'bold' }}
-                                                />
-                                            ) : (
-                                                <div style={{ fontWeight: '600', color: 'var(--primary)', fontSize: '1.1rem' }}>{group.name}</div>
-                                            )}
-                                        </td>
-                                        <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                                            {editingId === group.id ? (
-                                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-                                                    <button onClick={() => handleUpdate(group.id)} className="btn-icon success"><Save size={20} /></button>
-                                                    <button onClick={() => setEditingId(null)} className="btn-icon danger"><X size={20} /></button>
-                                                </div>
-                                            ) : (
-                                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-                                                    <button onClick={() => { setEditingId(group.id); setEditName(group.name); }} className="btn-icon primary"><Edit size={20} /></button>
-                                                    <button onClick={() => handleDelete(group.id)} className="btn-icon danger"><Trash2 size={20} /></button>
-                                                </div>
-                                            )}
-                                        </td>
-                                    </tr>
-                                )) : (
+                                {filteredGroups.length > 0 ? filteredGroups.map(group => {
+                                    const groupTeams = teams.filter(t => t.groupId === group.id);
+                                    return (
+                                        <tr key={group.id} style={{ borderBottom: '1px solid #f3f4f6', transition: 'background 0.2s' }} className="group-row">
+                                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                                                {editingId === group.id ? (
+                                                    <input
+                                                        type="text"
+                                                        value={editName}
+                                                        onChange={(e) => setEditName(e.target.value)}
+                                                        autoFocus
+                                                        style={{ padding: '0.5rem 0.75rem', borderRadius: '6px', border: '2px solid var(--accent)', width: '100%', maxWidth: '200px', fontWeight: 'bold' }}
+                                                    />
+                                                ) : (
+                                                    <div>
+                                                        <div style={{ fontWeight: '600', color: 'var(--primary)', fontSize: '1.1rem' }}>{group.name}</div>
+                                                        <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                                            {groupTeams.length > 0 ? groupTeams.map(team => (
+                                                                <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#f3f4f6', padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem' }}>
+                                                                    <img src={team.logo || '/teamlogo.png'} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+                                                                    <span>{team.name}</span>
+                                                                </div>
+                                                            )) : (
+                                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>No teams assigned</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right', verticalAlign: 'top' }}>
+                                                {editingId === group.id ? (
+                                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                                                        <button onClick={() => handleUpdate(group.id)} className="btn-icon success"><Save size={20} /></button>
+                                                        <button onClick={() => setEditingId(null)} className="btn-icon danger"><X size={20} /></button>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                                                        <button onClick={() => { setEditingId(group.id); setEditName(group.name); }} className="btn-icon primary"><Edit size={20} /></button>
+                                                        <button onClick={() => handleDelete(group.id)} className="btn-icon danger"><Trash2 size={20} /></button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                }) : (
                                     <tr>
                                         <td colSpan="2" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No groups found.</td>
                                     </tr>

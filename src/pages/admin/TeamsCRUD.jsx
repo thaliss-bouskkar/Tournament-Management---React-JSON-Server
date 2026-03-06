@@ -8,6 +8,7 @@ import {
 import toast from 'react-hot-toast';
 import PlayerDetailsModal from '../../components/PlayerDetailsModal';
 import { getAggregatedPlayerStats } from '../../utils/tournamentEngine';
+import imgfoot from '../../components/foot.png'
 
 const TeamsCRUD = () => {
     const [teams, setTeams] = useState([]);
@@ -147,7 +148,7 @@ const TeamsCRUD = () => {
         try {
             await playerService.create({ ...playerForm, teamId });
             toast.success('Player added successfully');
-            setPlayerForm({ name: '', number: '', position: '',imageUrl:null });
+            setPlayerForm({ name: '', number: '', position: '', imageUrl: null });
             fetchData();
         } catch {
             toast.error('Error adding player');
@@ -334,8 +335,38 @@ const TeamsCRUD = () => {
                                                             <td style={{ padding: '1rem' }} onClick={e => e.stopPropagation()}>
                                                                 {isEditingP ? <input type="number" value={editPlayerData.number} onChange={e => setEditPlayerData({ ...editPlayerData, number: e.target.value })} style={{ width: '45px', padding: '0.2rem' }} /> : player.number}
                                                             </td>
-                                                            <td style={{ padding: '1rem', fontWeight: '600', color: 'var(--primary)' }} onClick={e => e.stopPropagation()}>
-                                                                {isEditingP ? <input type="text" value={editPlayerData.name} onChange={e => setEditPlayerData({ ...editPlayerData, name: e.target.value })} style={{ padding: '0.2rem' }} /> : player.name}
+                                                            <td style={{ padding: '1rem' }} onClick={e => e.stopPropagation()}>
+                                                                {isEditingP ? (
+                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                                                        <input type="text" value={editPlayerData.name} onChange={e => setEditPlayerData({ ...editPlayerData, name: e.target.value })} style={{ padding: '0.2rem' }} />
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                            <div style={{ width: '30px', height: '30px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6', flexShrink: 0, border: '1px solid #eee' }}>
+                                                                                <img src={editPlayerData.imageUrl ||imgfoot} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                            </div>
+                                                                            <input
+                                                                                type="file"
+                                                                                accept="image/*"
+                                                                                onChange={e => {
+                                                                                    const file = e.target.files[0];
+                                                                                    if (!file) return;
+                                                                                    const reader = new FileReader();
+                                                                                    reader.onloadend = () => {
+                                                                                        setEditPlayerData({ ...editPlayerData, imageUrl: reader.result });
+                                                                                    };
+                                                                                    reader.readAsDataURL(file);
+                                                                                }}
+                                                                                style={{ fontSize: '0.7rem', width: '150px' }}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6', flexShrink: 0 }}>
+                                                                            <img src={player.imageUrl || imgfoot} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                        </div>
+                                                                        <span style={{ fontWeight: '600', color: 'var(--primary)' }}>{player.name}</span>
+                                                                    </div>
+                                                                )}
                                                             </td>
                                                             <td style={{ padding: '1rem' }} onClick={e => e.stopPropagation()}>
                                                                 {isEditingP ? <input type="text" value={editPlayerData.position} onChange={e => setEditPlayerData({ ...editPlayerData, position: e.target.value })} style={{ width: '50px', padding: '0.2rem' }} /> : <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'bold' }}>{player.position}</span>}
@@ -380,54 +411,54 @@ const TeamsCRUD = () => {
 
                                     {/* Add Player to Team */}
                                     <div style={{ backgroundColor: 'rgba(6, 78, 59, 0.03)', padding: '1.25rem', borderRadius: 'var(--radius)', border: '1px dashed rgba(6, 78, 59, 0.2)' }}>
-                                    <h6 style={{ marginBottom: '1rem', fontWeight: 'bold', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <UserPlus size={16} /> Add Registered Player
-                                    </h6>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr)) auto', gap: '1rem', alignItems: 'end' }}>
-                                        
-                                        {/* Player Name */}
-                                        <div>
-                                        <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.3rem' }}>Player Name</label>
-                                        <input type="text" placeholder="e.g. Lionel Messi" value={playerForm.name} onChange={e => setPlayerForm({ ...playerForm, name: e.target.value })} style={{ width: '100%', padding: '0.5rem' }} />
+                                        <h6 style={{ marginBottom: '1rem', fontWeight: 'bold', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <UserPlus size={16} /> Add Registered Player
+                                        </h6>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr)) auto', gap: '1rem', alignItems: 'end' }}>
+
+                                            {/* Player Name */}
+                                            <div>
+                                                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.3rem' }}>Player Name</label>
+                                                <input type="text" placeholder="e.g. Lionel Messi" value={playerForm.name} onChange={e => setPlayerForm({ ...playerForm, name: e.target.value })} style={{ width: '100%', padding: '0.5rem' }} />
+                                            </div>
+
+                                            {/* Player Number */}
+                                            <div>
+                                                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.3rem' }}>Number</label>
+                                                <input type="number" placeholder="10" value={playerForm.number} onChange={e => setPlayerForm({ ...playerForm, number: e.target.value })} style={{ width: '100%', padding: '0.5rem' }} />
+                                            </div>
+
+                                            {/* Player Position */}
+                                            <div>
+                                                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.3rem' }}>Position</label>
+                                                <input type="text" placeholder="FW, MF, DF, GK" value={playerForm.position} onChange={e => setPlayerForm({ ...playerForm, position: e.target.value })} style={{ width: '100%', padding: '0.5rem' }} />
+                                            </div>
+
+                                            {/* Player Image */}
+                                            <div>
+                                                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.3rem' }}>Player Image</label>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={e => {
+                                                        const file = e.target.files[0];
+                                                        if (!file) return;
+                                                        const reader = new FileReader();
+                                                        reader.onloadend = () => {
+                                                            setPlayerForm({ ...playerForm, imageUrl: reader.result }); // هذا Base64
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    }}
+                                                    style={{ width: '100%', padding: '0.5rem' }}
+                                                />
+                                            </div>
+
+                                            {/* Submit Button */}
+                                            <button className="btn-primary" style={{ padding: '0.5rem 1.5rem', height: '38px' }} onClick={() => handleAddPlayer(team.id)}>
+                                                <Plus size={18} /> Register Player
+                                            </button>
+
                                         </div>
-
-                                        {/* Player Number */}
-                                        <div>
-                                        <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.3rem' }}>Number</label>
-                                        <input type="number" placeholder="10" value={playerForm.number} onChange={e => setPlayerForm({ ...playerForm, number: e.target.value })} style={{ width: '100%', padding: '0.5rem' }} />
-                                        </div>
-
-                                        {/* Player Position */}
-                                        <div>
-                                        <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.3rem' }}>Position</label>
-                                        <input type="text" placeholder="FW, MF, DF, GK" value={playerForm.position} onChange={e => setPlayerForm({ ...playerForm, position: e.target.value })} style={{ width: '100%', padding: '0.5rem' }} />
-                                        </div>
-
-                                        {/* Player Image */}
-                                        <div>
-                                        <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.3rem' }}>Player Image</label>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={e => {
-                                            const file = e.target.files[0];
-                                            if (!file) return;
-                                            const reader = new FileReader();
-                                            reader.onloadend = () => {
-                                                setPlayerForm({ ...playerForm, imageUrl: reader.result }); // هذا Base64
-                                            };
-                                            reader.readAsDataURL(file);
-                                            }}
-                                            style={{ width: '100%', padding: '0.5rem' }}
-                                        />
-                                        </div>
-
-                                        {/* Submit Button */}
-                                        <button className="btn-primary" style={{ padding: '0.5rem 1.5rem', height: '38px' }} onClick={() => handleAddPlayer(team.id)}>
-                                        <Plus size={18} /> Register Player
-                                        </button>
-
-                                    </div>
                                     </div>
                                 </div>
                             )}

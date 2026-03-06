@@ -25,7 +25,9 @@ const Navbar = () => {
                     <NavLink to="/" style={({ isActive }) => ({ color: isActive ? 'var(--accent)' : 'var(--white)', fontWeight: isActive ? '700' : '400', transition: 'var(--transition)' })}>Home</NavLink>
                     <NavLink to="/stats" style={({ isActive }) => ({ color: isActive ? 'var(--accent)' : 'var(--white)', fontWeight: isActive ? '700' : '400', transition: 'var(--transition)' })}>Statistics</NavLink>
                     <NavLink to="/calendar" style={({ isActive }) => ({ color: isActive ? 'var(--accent)' : 'var(--white)', fontWeight: isActive ? '700' : '400', transition: 'var(--transition)' })}>Calendar</NavLink>
-                    <NavLink to="/login" style={{ backgroundColor: 'var(--accent)', color: 'var(--primary)', padding: '0.3rem 1rem', borderRadius: 'var(--radius)', fontWeight: 'bold' }}>Admin</NavLink>
+                    <NavLink to="/login" style={{padding: '0.3rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <img src="/admin.png" alt="admin" style={{ height: '1.9rem' }} />
+                    </NavLink>
                 </div>
             </div>
         </nav>

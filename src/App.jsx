@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import GroupsCRUD from './pages/admin/GroupsCRUD';
 import TeamsCRUD from './pages/admin/TeamsCRUD';
 import AdminProfile from './pages/admin/AdminProfile';
+import ResetPassword from './pages/ResetPassword';
 import Calendar from './pages/Calendar';
 import Dashboard from './pages/admin/Dashboard';
 import AdminStatistics from './pages/admin/AdminStatistics';
@@ -35,6 +36,7 @@ function App() {
                 <Route path="/stats" element={<Stats />} />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/resetpassword/:token" element={<ResetPassword />} />
               </Route>
 
               {/* Admin Routes - Protected */}
