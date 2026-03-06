@@ -28,6 +28,14 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.get('/', (req, res) => {
     res.send('API is running...');
 });
+const path = require('path');
+
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, 'dist'))); // ولا 'build' حسب Vite/CRA
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    });
+}
 
 // Global error handler
 app.use((err, req, res, next) => {
