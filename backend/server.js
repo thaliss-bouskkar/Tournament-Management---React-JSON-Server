@@ -31,8 +31,9 @@ app.get('/', (req, res) => {
 const path = require('path');
 
 if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'dist'))); // ولا 'build' حسب Vite/CRA
-    app.get('*', (req, res) => {
+    app.use(express.static(path.join(__dirname, 'dist')));
+
+    app.use((req, res) => {
         res.sendFile(path.join(__dirname, 'dist', 'index.html'));
     });
 }
