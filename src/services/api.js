@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-const api = axios.create({
+// src/services/api.js
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+export const api = axios.create({
     baseURL: API_URL,
 });
 
@@ -60,6 +60,7 @@ export const adminService = {
     create: (data) => api.post('/admins', data),
     update: (id, data) => api.patch(`/admins/${id}`, data),
     delete: (id) => api.delete(`/admins/${id}`),
+    getCurrent: () => api.get('/admins/1'),
 };
 
 export const settingService = {
@@ -72,4 +73,4 @@ export const logService = {
     create: (data) => api.post('/logs', { ...data, timestamp: new Date().toISOString() }),
 };
 
-export default api;
+export default API_URL;

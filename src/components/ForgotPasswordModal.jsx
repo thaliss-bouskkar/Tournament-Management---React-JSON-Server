@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Loader2, X, CheckCircle, AlertCircle } from 'lucide-react';
-import { getApiUrl } from '../config/api';
+import { API_URL } from '../services/api';
 
 const ForgotPasswordModal = ({ isOpen, onClose }) => {
     const [email, setEmail] = useState('');
@@ -33,7 +33,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
         setStatus('loading');
 
         try {
-            const response = await fetch(`${getApiUrl()}/api/auth/forgotpassword`, {
+            const response = await fetch(`${API_URL}/api/auth/forgotpassword`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -243,15 +243,15 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
             {/* Inline keyframes for animation since it might not be in the global css */}
             <style>
                 {`
-                @keyframes slideUp {
+@keyframes slideUp {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes spin {
+}
+@keyframes spin {
                     from { transform: rotate(0deg); }
                     to { transform: rotate(360deg); }
-                }
-                `}
+}
+`}
             </style>
         </div>
     );
