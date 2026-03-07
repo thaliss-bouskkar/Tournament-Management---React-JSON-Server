@@ -8,6 +8,7 @@ import {
     Settings,
     LogOut,
     X,
+    Menu,
     ChevronRight,
     BarChart,
     Shield
@@ -15,213 +16,177 @@ import {
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
 
-const SidebarItem = ({ to, icon: Icon, label, collapsed }) => (
+const SidebarItem = ({ to, icon: Icon, label, collapsed, onClick }) => (
     <NavLink
         to={to}
-        style={({ isActive }) => ({
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            padding: '0.75rem 1rem',
-            borderRadius: 'var(--radius)',
-            backgroundColor: isActive ? 'rgba(212, 175, 55, 0.1)' : 'transparent',
-            color: isActive ? 'var(--accent)' : 'var(--white)',
-            transition: 'var(--transition)',
-            marginBottom: '0.5rem',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden'
-        })}
+        onClick={onClick}
+        className={({ isActive }) =>
+            `flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 mb-2 truncate ${isActive
+                ? 'bg-accent/10 text-accent font-semibold'
+                : 'text-white hover:bg-white/5 hover:text-accent-light'
+            }`
+        }
     >
-        {Icon && <Icon size={20} />}
-        {!collapsed && <span>{label}</span>}
+        {Icon && <Icon size={20} className="shrink-0" />}
+        {(!collapsed || typeof onClick === 'function') && <span className="text-sm font-medium">{label}</span>}
     </NavLink>
 );
 
 const AdminLayout = () => {
     const [collapsed, setCollapsed] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     const { settings } = useSettings();
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
-    // ✅ Handle logout
     const handleLogout = () => {
-        logout();                 // clear auth (json/localStorage)
+        logout();
         setShowLogoutConfirm(false);
-        navigate('/login');       // redirect
+        navigate('/login');
     };
 
+    const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+    const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+    const menuItems = [
+        { to: "/admin", icon: LayoutDashboard, label: "Overview" },
+        { to: "/admin/groups", icon: Trophy, label: "Groups" },
+        { to: "/admin/teams", icon: Users, label: "Teams & Players" },
+        { to: "/admin/matches", icon: Calendar, label: "Matches" },
+        { to: "/admin/statistics", icon: BarChart, label: "Statistics" },
+        { to: "/admin/admins", icon: Shield, label: "Admins" },
+    ];
+
     return (
-        <>
-            <div style={{ display: 'flex', minHeight: '100vh' }}>
-                {/* Sidebar */}
-                <aside style={{
-                    width: collapsed ? '80px' : '260px',
-                    backgroundColor: 'var(--primary)',
-                    color: 'var(--white)',
-                    transition: 'width 0.3s ease',
-                    padding: '1.5rem 1rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    boxShadow: '4px 0 10px rgba(0,0,0,0.1)',
-                    position: 'sticky',
-                    top: 0,
-                    height: '100vh'
-                }}>
-                    <div style={{ display: 'flex', justifyContent: collapsed ? 'center' : 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                        {!collapsed && (
-                            <Link to="/admin" style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <img
-                                    src={settings?.logoUrl}
-                                    alt="Logo"
-                                    style={{ height: '42px', width: '42px', objectFit: 'contain', borderRadius: '4px' }}
-                                />
+        <div className="flex min-h-screen bg-bg-light font-sans">
+            {/* Sidebar - Desktop */}
+            <aside className={`hidden md:flex flex-col bg-primary text-white transition-all duration-300 shadow-xl sticky top-0 h-screen ${collapsed ? 'w-20' : 'w-64'}`}>
+                <div className={`flex items-center p-6 h-20 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+                    {!collapsed && (
+                        <Link to="/admin" className="text-accent font-bold text-lg flex items-center gap-3 truncate">
+                            {settings?.logoUrl && (
+                                <img src={settings.logoUrl} alt="Logo" className="h-10 w-10 object-contain rounded" />
+                            )}
+                            <span>DASHBOARD</span>
+                        </Link>
+                    )}
+                    <button onClick={() => setCollapsed(!collapsed)} className="text-white hover:text-accent transition-colors">
+                        {collapsed ? <ChevronRight size={24} /> : <X size={24} />}
+                    </button>
+                </div>
+
+                <nav className="flex-1 px-4 mt-4 overflow-y-auto custom-scrollbar">
+                    {menuItems.map((item) => (
+                        <SidebarItem key={item.to} {...item} collapsed={collapsed} />
+                    ))}
+                </nav>
+
+                <div className="p-4 border-t border-white/10 space-y-2">
+                    <SidebarItem to="/admin/profile" icon={Settings} label="Profile" collapsed={collapsed} />
+                    <button
+                        onClick={() => setShowLogoutConfirm(true)}
+                        className={`flex items-center gap-4 px-4 py-3 rounded-lg text-white hover:bg-red-500/10 hover:text-red-400 transition-all duration-200 w-full mb-2 ${collapsed ? 'justify-center' : ''}`}
+                    >
+                        <LogOut size={20} className="shrink-0" />
+                        {!collapsed && <span className="text-sm font-medium">Logout</span>}
+                    </button>
+                </div>
+            </aside>
+
+            {/* Mobile Sidebar / Drawer */}
+            {isMobileMenuOpen && (
+                <div className="fixed inset-0 z-[150] md:hidden">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={closeMobileMenu}></div>
+                    <aside className="fixed inset-y-0 left-0 w-72 bg-primary text-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
+                        <div className="flex items-center justify-between p-6 h-20 border-b border-white/10">
+                            <Link to="/admin" onClick={closeMobileMenu} className="text-accent font-bold text-lg flex items-center gap-3">
+                                {settings?.logoUrl && <img src={settings.logoUrl} alt="Logo" className="h-10 w-10 object-contain" />}
                                 <span>DASHBOARD</span>
                             </Link>
-                        )}
-                        <button
-                            onClick={() => setCollapsed(!collapsed)}
-                            style={{ color: 'var(--white)', background: 'none', border: 'none', cursor: 'pointer' }}
-                        >
-                            {collapsed ? <ChevronRight size={24} /> : <X size={24} />}
-                        </button>
-                    </div>
-
-                    <nav style={{ flex: 1 }}>
-                        <SidebarItem to="/admin" icon={LayoutDashboard} label="Overview" collapsed={collapsed} />
-                        <SidebarItem to="/admin/groups" icon={Trophy} label="Groups" collapsed={collapsed} />
-                        <SidebarItem to="/admin/teams" icon={Users} label="Teams & Players" collapsed={collapsed} />
-                        <SidebarItem to="/admin/matches" icon={Calendar} label="Matches" collapsed={collapsed} />
-                        <SidebarItem to="/admin/statistics" icon={BarChart} label="Statistics" collapsed={collapsed} />
-                        <SidebarItem to="/admin/admins" icon={Shield} label="Admins" collapsed={collapsed} />
-                    </nav>
-
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginTop: '1rem' }}>
-                        <SidebarItem to="/admin/profile" icon={Settings} label="Profile" collapsed={collapsed} />
-
-                        <button
-                            onClick={() => setShowLogoutConfirm(true)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '1rem',
-                                padding: '0.75rem 1rem',
-                                width: '100%',
-                                color: 'var(--white)',
-                                borderRadius: 'var(--radius)',
-                                background: 'transparent',
-                                border: 'none',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <LogOut size={20} />
-                            {!collapsed && <span>Logout</span>}
-                        </button>
-                    </div>
-                </aside>
-
-                {/* Main Content */}
-                <main style={{ flex: 1, backgroundColor: 'var(--bg-light)', padding: '2rem' }}>
-                    <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h1 style={{ color: 'var(--primary)', fontSize: '1.8rem', fontWeight: '700' }}>Admin Panel</h1>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <span style={{ color: 'var(--text-muted)' }}>
-                                Welcome, {user?.name || 'Admin'}
-                            </span>
-
-                            <div style={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '50%',
-                                backgroundColor: 'var(--accent)',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                fontWeight: 'bold',
-                                color: 'var(--primary)',
-                                overflow: 'hidden'
-                            }}>
-                                {user?.image ? (
-                                    <img
-                                        src={user.image}
-                                        alt={user.name}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    />
-                                ) : (
-                                    user?.name?.[0]?.toUpperCase() || 'A'
-                                )}
-                            </div>
+                            <button onClick={closeMobileMenu} className="text-white"><X size={24} /></button>
                         </div>
-                    </header>
+                        <nav className="flex-1 p-4 mt-2 overflow-y-auto">
+                            {menuItems.map((item) => (
+                                <SidebarItem key={item.to} {...item} onClick={closeMobileMenu} />
+                            ))}
+                        </nav>
+                        <div className="p-4 border-t border-white/10 space-y-2">
+                            <SidebarItem to="/admin/profile" icon={Settings} label="Profile" onClick={closeMobileMenu} />
+                            <button
+                                onClick={() => setShowLogoutConfirm(true)}
+                                className="flex items-center gap-4 px-4 py-3 rounded-lg text-white hover:bg-red-500/10 hover:text-red-400 transition-all w-full"
+                            >
+                                <LogOut size={20} />
+                                <span className="font-medium">Logout</span>
+                            </button>
+                        </div>
+                    </aside>
+                </div>
+            )}
 
-                    <Outlet />
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col min-w-0">
+                {/* Header */}
+                <header className="h-20 bg-white border-b border-gray-100 px-4 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <button onClick={toggleMobileMenu} className="md:hidden p-2 text-primary hover:bg-gray-100 rounded-lg transition-colors">
+                            <Menu size={24} />
+                        </button>
+                        <h1 className="text-lg md:text-2xl font-bold text-primary truncate">Admin Panel</h1>
+                    </div>
+
+                    <div className="flex items-center gap-3 md:gap-4 ml-4">
+                        <div className="text-right hidden sm:block">
+                            <p className="text-sm font-semibold text-gray-900">{user?.name || 'Admin'}</p>
+                            <p className="text-xs text-gray-500">Administrator</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-accent border-2 border-accent-light flex items-center justify-center text-primary font-bold overflow-hidden shadow-sm">
+                            {user?.image ? (
+                                <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+                            ) : (
+                                user?.name?.[0]?.toUpperCase() || 'A'
+                            )}
+                        </div>
+                    </div>
+                </header>
+
+                <main className="p-4 md:p-8 flex-1 overflow-x-hidden">
+                    <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        <Outlet />
+                    </div>
                 </main>
             </div>
 
-            {/* ✅ Logout Confirmation Modal */}
+            {/* Logout Modal */}
             {showLogoutConfirm && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 999
-                }}>
-                    <div style={{
-                        background: '#1c1c1c',
-                        padding: '2rem',
-                        borderRadius: '16px',
-                        width: '320px',
-                        textAlign: 'center',
-                        boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
-                    }}>
-                        <LogOut size={40} color="#EF4444" style={{ marginBottom: '1rem' }} />
-
-                        <h3 style={{ marginBottom: '0.5rem',color: '#717070' }}>Confirm Logout</h3>
-                        <p style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                            Are you sure you want to logout?
-                        </p>
-
-                        <div style={{ display: 'flex', gap: '1rem' }}>
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowLogoutConfirm(false)}></div>
+                    <div className="bg-white rounded-2xl p-8 w-full max-w-sm text-center shadow-2xl relative animate-in zoom-in-95 duration-200">
+                        <div className="mx-auto w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6">
+                            <LogOut size={32} />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Logout</h3>
+                        <p className="text-gray-500 mb-8 text-sm">Are you sure you want to exit the dashboard safely?</p>
+                        <div className="flex gap-3">
                             <button
                                 onClick={() => setShowLogoutConfirm(false)}
-                                style={{
-                                    flex: 1,
-                                    padding: '0.6rem',
-                                    borderRadius: '8px',
-                                    border: '1px solid #333',
-                                    background: 'transparent',
-                                    color: '#fff',
-                                    cursor: 'pointer'
-                                }}
+                                className="flex-1 py-3 px-4 rounded-xl border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition-colors"
                             >
-                                Cancel
+                                Keep Browsing
                             </button>
-
                             <button
                                 onClick={handleLogout}
-                                style={{
-                                    flex: 1,
-                                    padding: '0.6rem',
-                                    borderRadius: '8px',
-                                    border: 'none',
-                                    background: '#EF4444',
-                                    color: '#fff',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold'
-                                }}
+                                className="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20"
                             >
-                                Logout
+                                Log Me Out
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 };
 
